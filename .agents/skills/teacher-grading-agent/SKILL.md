@@ -34,6 +34,7 @@ Always keep datasets separated by date:
 ## Hard Rules
 
 - Never output a score without evidence.
+- Teacher-facing reasons must be Chinese (`reason` and `review_reason`).
 - Any item below confidence threshold must go to manual review queue.
 - Never overwrite prior runs; always create a new run folder.
 

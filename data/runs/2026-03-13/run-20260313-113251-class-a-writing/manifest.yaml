@@ -1,0 +1,17 @@
+run_id: run-20260313-113251-class-a-writing
+date: '2026-03-13'
+timezone: Asia/Shanghai
+rubric_path: data/rules/2026-03-13/rubric-demo.yaml
+submission_dir: data/submissions/2026-03-13/class-a-writing
+output_dir: data/outputs/2026-03-13/run-20260313-113251-class-a-writing
+artifacts:
+  result_xlsx: result.xlsx
+  report_html: report.html
+  review_queue_xlsx: review_queue.xlsx
+trace:
+  grading_raw_jsonl: data/runs/2026-03-13/run-20260313-113251-class-a-writing/grading_raw.jsonl
+  logs: data/runs/2026-03-13/run-20260313-113251-class-a-writing/logs.txt
+policy:
+  confidence_threshold: 0.75
+  low_confidence_action: manual_review
+status: completed

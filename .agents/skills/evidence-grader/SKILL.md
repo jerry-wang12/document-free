@@ -29,6 +29,7 @@ Each JSON line must include:
 ## Hard rules
 
 - Evidence must cite source content segments.
+- `reason` and `review_reason` should be Chinese for teacher readability.
 - If no reliable evidence exists, set low confidence and flag for review.
 - Never fabricate student identity fields.
 

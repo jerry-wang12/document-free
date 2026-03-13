@@ -9,6 +9,7 @@ Recommended `result.xlsx` columns:
 - confidence
 - review_required
 - review_reason
+- review_reason_zh
 - generated_at
 
 Recommended `review_queue.xlsx` columns:
@@ -17,5 +18,6 @@ Recommended `review_queue.xlsx` columns:
 - total_score
 - confidence
 - review_reason
+- review_reason_zh
 - missing_evidence_dimensions
 - suggested_manual_checks

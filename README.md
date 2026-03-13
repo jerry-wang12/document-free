@@ -6,6 +6,10 @@
 - 输出结果（`result.xlsx` / `report.html` / `review_queue.xlsx`）
 - 全流程按日期与 run 隔离，便于追溯
 
+## 环境安装
+
+- 本地环境配置说明：`docs/ENV_SETUP.md`
+
 ## 1. 项目定位
 
 本项目是“老师本地 + Agent 协作”模式，不是传统 Web 系统。
@@ -92,6 +96,13 @@ data/rules/2026-03-13/rubric-writing-v1.yaml。
 请使用 result-exporter：
 将 data/runs/2026-03-13/<run-id>/grading_raw.jsonl
 导出到 data/outputs/2026-03-13/<run-id>/。
+```
+
+### 5.4 重生成可视化 `report.html`（Vue + Tailwind 单文件）
+
+```bash
+python3 .agents/skills/result-exporter/references/generate_report_html.py \
+  --manifest data/runs/2026-03-13/<run-id>/manifest.yaml
 ```
 
 ## 6. 命名约定
