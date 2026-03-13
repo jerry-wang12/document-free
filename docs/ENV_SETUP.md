@@ -1,19 +1,20 @@
 # 本地环境安装与配置（老师使用版）
 
-本文档用于在老师电脑上完成一次性环境配置，确保可在本地通过 Agent 处理文档评分任务。
+本文档用于在老师电脑上完成一次性环境配置，确保可在本地通过 AI 助手处理文档评分任务。
 
 ## 1. 适用范围
 
 - 项目路径：`document-free`
-- 使用方式：本地 Codex + Skills（对话驱动）
+- 使用方式：本地 `Qwen Coding Plan` / `Trae`（对话驱动）
 - 支持文档：`PDF / DOCX / XLSX / PPTX`
 - 支持系统：`macOS`、`Windows 10/11`
 
 ## 2. 必装软件
 
-### 2.1 Codex 桌面端
+### 2.1 AI 助手工具
 
-- 安装并登录 Codex（本项目通过 Skills 触发文档工作流）
+- 推荐：`Qwen Coding Plan` 或 `Trae`
+- 要求：能在本地项目目录执行命令、读写文件
 
 ### 2.2 Node.js 与 pnpm
 
@@ -24,11 +25,9 @@
 ### 2.3 Python
 
 - Python：建议 `>= 3.10`
-- 用于部分 Skills 内置脚本（如文档解析、报告导出）
+- 用于部分文档处理与报告导出脚本
 
 ### 2.4 文档系统依赖
-
-以下依赖来自已安装的 `docx/xlsx/pdf/pptx` skills：
 
 - LibreOffice（`soffice`）：Office 转换、公式重算
 - Poppler（`pdftoppm` / `pdftotext`）：PDF 渲染与提取
@@ -143,15 +142,11 @@ for m in mods:
 PY
 ```
 
-## 6. 技能安装（项目级）
+## 6. 项目能力检查（不依赖翻墙）
 
-在项目根目录执行：
+本仓库已包含 `.agents/skills` 目录（`docx/xlsx/pdf/pptx` 及工作流 skills），拉取仓库后直接可用，无需额外联网安装。
 
-```bash
-npx skills add https://github.com/anthropics/skills --skill docx xlsx pdf pptx --agent codex --yes --copy
-```
-
-安装后检查：
+校验目录：
 
 macOS / Linux：
 
@@ -196,7 +191,7 @@ data/runs/YYYY-MM-DD/
 
 1. 放入测试规则到 `data/rules/<date>/`
 2. 放入测试文档到 `data/submissions/<date>/`
-3. 在 Codex 对话中发送：
+3. 在 Qwen Coding Plan 或 Trae 中发送：
 
 ```text
 请使用 teacher-grading-agent：
@@ -215,8 +210,8 @@ data/runs/YYYY-MM-DD/
 
 ### 9.1 `report.html` 打开空白或样式缺失
 
-- 该模板使用 CDN 加载 Vue/Tailwind/Chart.js
-- 请确认本机可访问外网 CDN
+- 模板默认在线加载 Vue/Tailwind/Chart.js
+- 若网络受限，会自动回退到离线静态展示（仍可查看主要信息）
 
 ### 9.2 `soffice` / `pdftoppm` 找不到（Windows 常见）
 
@@ -226,7 +221,7 @@ data/runs/YYYY-MM-DD/
 
 ### 9.3 评分结果中出现英文复核原因
 
-- 使用项目内 `result-exporter` 的报告脚本会自动中文化常见复核原因：
+- 使用项目内报告脚本可自动中文化常见复核原因：
 
 ```bash
 python3 .agents/skills/result-exporter/references/generate_report_html.py \
@@ -242,5 +237,5 @@ py -3 .agents/skills/result-exporter/references/generate_report_html.py `
 
 ## 10. 配置完成后
 
-- 重启 Codex，确保新装技能全部生效
+- 重启你使用的 AI 工具或编辑器插件
 - 建议每次评分使用新 `run-id`，避免覆盖历史结果

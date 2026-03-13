@@ -12,8 +12,8 @@
 
 ## 1. 项目定位
 
-本项目是“老师本地 + Agent 协作”模式，不是传统 Web 系统。
-你主要通过对话触发技能（skills）完成任务，而不是手动写脚本。
+本项目是“老师本地 + AI 助手协作”模式，不是传统 Web 系统。
+你可以用国内可用的工具（如 Qwen Coding Plan、Trae）按本文档流程完成批处理。
 
 ## 2. 目录结构
 
@@ -132,4 +132,4 @@ python3 .agents/skills/result-exporter/references/generate_report_html.py \
 
 - 评分结论应始终附证据片段（evidence）。
 - 结果文件建议每次写入新 run 目录，避免覆盖。
-- 新装 skills 后建议重启 Codex 以确保识别完整。
+- 更新流程后建议重启你使用的 AI 工具或编辑器插件。

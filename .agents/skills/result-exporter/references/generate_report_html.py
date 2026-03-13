@@ -217,7 +217,12 @@ def build_payload(manifest_path: Path, raw_path: Path):
 
 
 def render_html(payload: dict) -> str:
-    data_json = json.dumps(payload, ensure_ascii=False)
+    data_json = (
+        json.dumps(payload, ensure_ascii=False)
+        .replace("</", "<\\/")
+        .replace("\u2028", "\\u2028")
+        .replace("\u2029", "\\u2029")
+    )
     title = f"{payload['meta'].get('run_id', '')} - 评分报告"
     return f"""<!doctype html>
 <html lang="zh-CN">
@@ -250,6 +255,76 @@ def render_html(payload: dict) -> str:
   </script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    body {{
+      margin: 0;
+      background: #f8fafc;
+      color: #0f172a;
+      font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }}
+    .fallback-wrap {{
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }}
+    .fallback-card {{
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 16px;
+      margin-top: 12px;
+    }}
+    .fallback-grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }}
+    .fallback-table {{
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin-top: 10px;
+    }}
+    .fallback-table th, .fallback-table td {{
+      border: 1px solid #e2e8f0;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }}
+    .fallback-table th {{
+      background: #f1f5f9;
+    }}
+    .fallback-badge {{
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+    }}
+    .ok {{
+      background: #dcfce7;
+      color: #166534;
+    }}
+    .warn {{
+      background: #fee2e2;
+      color: #991b1b;
+    }}
+    .bar-row {{
+      margin: 8px 0;
+      font-size: 14px;
+    }}
+    .bar-track {{
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 4px;
+    }}
+    .bar-fill {{
+      height: 10px;
+      background: linear-gradient(90deg, #0f766e, #0ea5e9);
+    }}
+  </style>
 </head>
 <body class="bg-paper text-ink min-h-screen">
   <div id="app" class="max-w-7xl mx-auto px-4 py-8 md:px-8 md:py-10">
@@ -360,111 +435,200 @@ def render_html(payload: dict) -> str:
 
   <script>
     const REPORT_DATA = {data_json};
+    function escapeHtml(value) {{
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }}
 
-    const app = Vue.createApp({{
-      data() {{
-        return {{
-          meta: REPORT_DATA.meta,
-          summary: REPORT_DATA.summary,
-          bands: REPORT_DATA.bands,
-          reviewReasons: REPORT_DATA.review_reasons,
-          dimensionAverages: REPORT_DATA.dimension_averages,
-          rows: REPORT_DATA.rows,
-          onlyReview: false
-        }};
-      }},
-      computed: {{
-        filteredRows() {{
-          return this.onlyReview ? this.rows.filter(r => r.review_required) : this.rows;
-        }}
-      }},
-      mounted() {{
-        this.renderBandChart();
-        this.renderReasonChart();
-        this.renderDimensionChart();
-      }},
-      methods: {{
-        renderBandChart() {{
-          const ctx = document.getElementById('bandChart');
-          if (!ctx || !window.Chart) return;
-          new Chart(ctx, {{
-            type: 'bar',
-            data: {{
-              labels: this.bands.map(b => `${{b.label}} (${{b.min}}-${{b.max}})`),
-              datasets: [{{
-                label: '人数',
-                data: this.bands.map(b => b.count),
-                backgroundColor: ['#f97316', '#eab308', '#14b8a6', '#0ea5e9'],
-                borderRadius: 10
-              }}]
-            }},
-            options: {{
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {{
-                legend: {{ display: false }}
+    function renderFallback(data) {{
+      const root = document.getElementById('app');
+      if (!root) return;
+      const total = data.summary.total_files || 0;
+      const maxBand = Math.max(1, ...data.bands.map(b => b.count || 0));
+      const bandRows = data.bands.map(b => {{
+        const w = ((b.count || 0) / maxBand) * 100;
+        return `
+          <div class="bar-row">
+            <div>${{escapeHtml(b.label)}}（${{b.min}}-${{b.max}}）：${{b.count}}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${{w}}%"></div></div>
+          </div>
+        `;
+      }}).join('');
+
+      const reasonRows = (data.review_reasons || []).map(r =>
+        `<tr><td>${{escapeHtml(r.reason)}}</td><td>${{r.count}}</td></tr>`
+      ).join('') || '<tr><td>无</td><td>0</td></tr>';
+
+      const tableRows = (data.rows || []).map(r => `
+        <tr>
+          <td>${{escapeHtml(r.student_id || '-')}}</td>
+          <td>${{escapeHtml(r.source_file)}}</td>
+          <td>${{r.total_score}}</td>
+          <td>${{r.confidence}}</td>
+          <td>${{r.review_required ? '<span class="fallback-badge warn">需复核</span>' : '<span class="fallback-badge ok">通过</span>'}}</td>
+          <td>${{escapeHtml(r.review_reason)}}</td>
+        </tr>
+      `).join('');
+
+      root.innerHTML = `
+        <div class="fallback-wrap">
+          <div class="fallback-card">
+            <h1 style="margin:0 0 8px 0;">评分报告（离线回退模式）</h1>
+            <div>run_id：${{escapeHtml(data.meta.run_id)}}</div>
+            <div>日期：${{escapeHtml(data.meta.date)}}</div>
+            <div>规则：${{escapeHtml(data.meta.rubric_path)}}</div>
+            <div>生成时间：${{escapeHtml(data.meta.generated_at)}}</div>
+          </div>
+          <div class="fallback-grid">
+            <div class="fallback-card"><div>总文件数</div><div style="font-size:26px;font-weight:700;margin-top:6px;">${{total}}</div></div>
+            <div class="fallback-card"><div>平均分</div><div style="font-size:26px;font-weight:700;margin-top:6px;">${{data.summary.avg_score}} / ${{data.summary.total_score_max}}</div></div>
+            <div class="fallback-card"><div>平均置信度</div><div style="font-size:26px;font-weight:700;margin-top:6px;">${{data.summary.avg_confidence}}</div></div>
+            <div class="fallback-card"><div>需复核</div><div style="font-size:26px;font-weight:700;margin-top:6px;color:#991b1b;">${{data.summary.review_count}} (${{data.summary.review_ratio}}%)</div></div>
+          </div>
+          <div class="fallback-card">
+            <h2 style="margin:0 0 8px 0;">分数段分布</h2>
+            ${{bandRows}}
+          </div>
+          <div class="fallback-card">
+            <h2 style="margin:0 0 8px 0;">复核原因</h2>
+            <table class="fallback-table">
+              <thead><tr><th>原因</th><th>次数</th></tr></thead>
+              <tbody>${{reasonRows}}</tbody>
+            </table>
+          </div>
+          <div class="fallback-card">
+            <h2 style="margin:0 0 8px 0;">明细列表</h2>
+            <table class="fallback-table">
+              <thead>
+                <tr><th>学号</th><th>文件</th><th>总分</th><th>置信度</th><th>复核状态</th><th>复核原因（中文）</th></tr>
+              </thead>
+              <tbody>${{tableRows}}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }}
+
+    function mountVueApp() {{
+      const app = Vue.createApp({{
+        data() {{
+          return {{
+            meta: REPORT_DATA.meta,
+            summary: REPORT_DATA.summary,
+            bands: REPORT_DATA.bands,
+            reviewReasons: REPORT_DATA.review_reasons,
+            dimensionAverages: REPORT_DATA.dimension_averages,
+            rows: REPORT_DATA.rows,
+            onlyReview: false
+          }};
+        }},
+        computed: {{
+          filteredRows() {{
+            return this.onlyReview ? this.rows.filter(r => r.review_required) : this.rows;
+          }}
+        }},
+        mounted() {{
+          this.renderBandChart();
+          this.renderReasonChart();
+          this.renderDimensionChart();
+        }},
+        methods: {{
+          renderBandChart() {{
+            const ctx = document.getElementById('bandChart');
+            if (!ctx || !window.Chart) return;
+            new Chart(ctx, {{
+              type: 'bar',
+              data: {{
+                labels: this.bands.map(b => `${{b.label}} (${{b.min}}-${{b.max}})`),
+                datasets: [{{
+                  label: '人数',
+                  data: this.bands.map(b => b.count),
+                  backgroundColor: ['#f97316', '#eab308', '#14b8a6', '#0ea5e9'],
+                  borderRadius: 10
+                }}]
               }},
-              scales: {{
-                y: {{ beginAtZero: true, ticks: {{ precision: 0 }} }}
-              }}
-            }}
-          }});
-        }},
-        renderReasonChart() {{
-          const ctx = document.getElementById('reasonChart');
-          if (!ctx || !window.Chart) return;
-          const labels = this.reviewReasons.length ? this.reviewReasons.map(r => r.reason) : ['无'];
-          const values = this.reviewReasons.length ? this.reviewReasons.map(r => r.count) : [1];
-          new Chart(ctx, {{
-            type: 'doughnut',
-            data: {{
-              labels,
-              datasets: [{{
-                data: values,
-                backgroundColor: ['#ef4444', '#f59e0b', '#6366f1', '#10b981', '#0ea5e9'],
-              }}]
-            }},
-            options: {{
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {{
-                legend: {{
-                  position: 'bottom'
+              options: {{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {{
+                  legend: {{ display: false }}
+                }},
+                scales: {{
+                  y: {{ beginAtZero: true, ticks: {{ precision: 0 }} }}
                 }}
               }}
-            }}
-          }});
-        }},
-        renderDimensionChart() {{
-          const ctx = document.getElementById('dimensionChart');
-          if (!ctx || !window.Chart) return;
-          new Chart(ctx, {{
-            type: 'radar',
-            data: {{
-              labels: this.dimensionAverages.map(d => d.name),
-              datasets: [{{
-                label: '维度均分',
-                data: this.dimensionAverages.map(d => d.avg_score),
-                backgroundColor: 'rgba(20, 184, 166, 0.20)',
-                borderColor: '#0f766e',
-                pointBackgroundColor: '#0f766e'
-              }}]
-            }},
-            options: {{
-              responsive: true,
-              maintainAspectRatio: false,
-              scales: {{
-                r: {{
-                  beginAtZero: true
+            }});
+          }},
+          renderReasonChart() {{
+            const ctx = document.getElementById('reasonChart');
+            if (!ctx || !window.Chart) return;
+            const labels = this.reviewReasons.length ? this.reviewReasons.map(r => r.reason) : ['无'];
+            const values = this.reviewReasons.length ? this.reviewReasons.map(r => r.count) : [1];
+            new Chart(ctx, {{
+              type: 'doughnut',
+              data: {{
+                labels,
+                datasets: [{{
+                  data: values,
+                  backgroundColor: ['#ef4444', '#f59e0b', '#6366f1', '#10b981', '#0ea5e9'],
+                }}]
+              }},
+              options: {{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {{
+                  legend: {{
+                    position: 'bottom'
+                  }}
                 }}
               }}
-            }}
-          }});
+            }});
+          }},
+          renderDimensionChart() {{
+            const ctx = document.getElementById('dimensionChart');
+            if (!ctx || !window.Chart) return;
+            new Chart(ctx, {{
+              type: 'radar',
+              data: {{
+                labels: this.dimensionAverages.map(d => d.name),
+                datasets: [{{
+                  label: '维度均分',
+                  data: this.dimensionAverages.map(d => d.avg_score),
+                  backgroundColor: 'rgba(20, 184, 166, 0.20)',
+                  borderColor: '#0f766e',
+                  pointBackgroundColor: '#0f766e'
+                }}]
+              }},
+              options: {{
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {{
+                  r: {{
+                    beginAtZero: true
+                  }}
+                }}
+              }}
+            }});
+          }}
         }}
-      }}
-    }});
+      }});
+      app.mount('#app');
+    }}
 
-    app.mount('#app');
+    try {{
+      if (window.Vue && typeof Vue.createApp === 'function') {{
+        mountVueApp();
+      }} else {{
+        renderFallback(REPORT_DATA);
+      }}
+    }} catch (err) {{
+      console.error('Vue render failed, fallback mode enabled.', err);
+      renderFallback(REPORT_DATA);
+    }}
   </script>
 </body>
 </html>"""
