@@ -1,0 +1,23 @@
+rubric:
+  id: "math-proof-grade10-v1"
+  title: "Grade 10 Math Proof Rubric"
+  version: "1.0.0"
+  total_score: 20
+  dimensions:
+    - key: "logic"
+      name: "Reasoning Logic"
+      weight: 0.5
+      max_score: 10
+    - key: "method"
+      name: "Method Correctness"
+      weight: 0.3
+      max_score: 6
+    - key: "expression"
+      name: "Expression Clarity"
+      weight: 0.2
+      max_score: 4
+policy:
+  confidence_threshold: 0.8
+  require_evidence: true
+output:
+  include_review_queue: true

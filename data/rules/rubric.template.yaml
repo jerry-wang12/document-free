@@ -1,0 +1,65 @@
+rubric:
+  id: "assignment-template-v1"
+  title: "通用作业评分标准"
+  version: "1.0.0"
+  total_score: 100
+  dimensions:
+    - key: "accuracy"
+      name: "准确性"
+      weight: 0.4
+      max_score: 40
+      criteria:
+        - level: "excellent"
+          score_range: [34, 40]
+          description: "核心内容准确，几乎无事实或逻辑错误。"
+        - level: "good"
+          score_range: [26, 33]
+          description: "整体准确，存在少量不影响结论的瑕疵。"
+        - level: "fair"
+          score_range: [16, 25]
+          description: "有明显错误或遗漏，结论支撑不足。"
+        - level: "poor"
+          score_range: [0, 15]
+          description: "核心观点错误或严重缺失。"
+    - key: "structure"
+      name: "结构与表达"
+      weight: 0.3
+      max_score: 30
+      criteria:
+        - level: "excellent"
+          score_range: [26, 30]
+          description: "结构清晰，层次分明，表达流畅。"
+        - level: "good"
+          score_range: [20, 25]
+          description: "结构较清晰，表达基本通顺。"
+        - level: "fair"
+          score_range: [12, 19]
+          description: "结构松散，表达有较多不清晰处。"
+        - level: "poor"
+          score_range: [0, 11]
+          description: "结构混乱，表达严重影响理解。"
+    - key: "completeness"
+      name: "完整性"
+      weight: 0.3
+      max_score: 30
+      criteria:
+        - level: "excellent"
+          score_range: [26, 30]
+          description: "覆盖全部要求，内容完整。"
+        - level: "good"
+          score_range: [20, 25]
+          description: "覆盖主要要求，少量细节缺失。"
+        - level: "fair"
+          score_range: [12, 19]
+          description: "存在关键项遗漏。"
+        - level: "poor"
+          score_range: [0, 11]
+          description: "大量要求未覆盖。"
+policy:
+  confidence_threshold: 0.70
+  require_evidence: true
+  evidence_quote_max_chars: 120
+  review_when_missing_dimension: true
+output:
+  include_review_queue: true
+  include_summary_html: true

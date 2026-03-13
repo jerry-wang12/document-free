@@ -1,0 +1,17 @@
+run_id: "run-YYYYMMDD-HHMMSS-班级-任务"
+date: "YYYY-MM-DD"
+timezone: "Asia/Shanghai"
+rubric_path: "data/rules/YYYY-MM-DD/rubric-xxx.yaml"
+submission_dir: "data/submissions/YYYY-MM-DD/班级或任务目录"
+output_dir: "data/outputs/YYYY-MM-DD/<run_id>"
+artifacts:
+  result_xlsx: "result.xlsx"
+  report_html: "report.html"
+  review_queue_xlsx: "review_queue.xlsx"
+trace:
+  grading_raw_jsonl: "data/runs/YYYY-MM-DD/<run_id>/grading_raw.jsonl"
+  logs: "data/runs/YYYY-MM-DD/<run_id>/logs.txt"
+policy:
+  confidence_threshold: 0.75
+  low_confidence_action: "manual_review"
+status: "pending"

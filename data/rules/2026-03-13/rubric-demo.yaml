@@ -1,0 +1,24 @@
+rubric:
+  id: "chinese-writing-grade11-v1"
+  title: "高二作文评分标准（示例）"
+  version: "1.0.0"
+  total_score: 60
+  dimensions:
+    - key: "topic"
+      name: "立意与切题"
+      weight: 0.35
+      max_score: 21
+    - key: "argument"
+      name: "论证与材料"
+      weight: 0.40
+      max_score: 24
+    - key: "language"
+      name: "语言与结构"
+      weight: 0.25
+      max_score: 15
+policy:
+  confidence_threshold: 0.75
+  require_evidence: true
+output:
+  include_review_queue: true
+  include_summary_html: true
